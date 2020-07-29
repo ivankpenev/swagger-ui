@@ -1,0 +1,401 @@
+openapi: 3.0.0
+info:
+  title: Users Resource API
+  description: Users are members of PetHubs platform. Use the user API calls to manage
+    the users related to your platform
+  termsOfService: pethub.com/api/terms
+  contact:
+    name: PetHub API
+    url: https://pethub.com/api
+    email: devteam@pethub.com
+  version: 1.0.0
+servers:
+- url: https://virtserver.swaggerhub.com/PetHub/users/1.0.0
+  description: SwaggerHub API Auto Mocking
+- url: https://virtserver.swaggerhub.com/ivanpenev/users/1.0.0
+  description: SwaggerHub API Auto Mocking
+- url: https://www.pethub.com/
+  description: standard server
+tags:
+- name: Manage Users
+  description: Get details about PetHub users
+- name: Manage Users By Organization
+  description: Manage PetHub users specific to organization
+paths:
+  /users:
+    get:
+      tags:
+      - Manage Users
+      summary: Get all users in PetHub's directory
+      description: Returns all users in Pethub's database. Information is specific
+        to the owner and not to the pets.
+      parameters:
+      - name: size
+        in: query
+        description: limits the number of entries returned on first page
+        required: false
+        allowEmptyValue: false
+        style: form
+        explode: true
+        schema:
+          maxLength: 30
+          minLength: 5
+          type: integer
+          default: 10
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                title: list of users
+                type: array
+                items:
+                  $ref: '#/components/schemas/Users'
+      security:
+      - PetHubAPIOauth:
+        - profiles:read
+    post:
+      tags:
+      - Manage Users
+      requestBody:
+        description: new user to be uploaded to PetHub's database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        "201":
+          description: Successfully created new user in PetHub's database
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/201New'
+      security:
+      - PetHubAPIOauth:
+        - profiles:edit
+  /users/{userID}:
+    get:
+      tags:
+      - Manage Users
+      parameters:
+      - name: userID
+        in: path
+        description: The user identification
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+        example: johndoe1234
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+      security:
+      - PetHubAPIOauth:
+        - profiles:read
+        - profiles:edit
+    patch:
+      tags:
+      - Manage Users
+      parameters:
+      - name: userID
+        in: path
+        description: The user identification
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+        example: johndoe1234
+      requestBody:
+        description: User Information to be updated
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/userInformation'
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/returnUpdateInfo'
+      security:
+      - PetHubAPIOauth:
+        - profiles:edit
+  /{orgID}/users/:
+    get:
+      tags:
+      - Manage Users By Organization
+      summary: Return user information by organization
+      description: Get information about the users related to your organization
+      parameters:
+      - name: orgID
+        in: path
+        description: the unique ID for your organization
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+        example: petlove1234
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Users'
+      security:
+      - PetHubAPIOauth:
+        - profiles:read
+        - profiles:edit
+    post:
+      tags:
+      - Manage Users By Organization
+      summary: Add new user to organization and pethub database
+      description: Add a new user to PetHub's database and also link them to your
+        organization
+      parameters:
+      - name: orgID
+        in: path
+        description: the unique ID for your organization
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+        example: petlove1234
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        "201":
+          description: Successfully created new user in PetHub's database and linked
+            to your org
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/201New'
+      security:
+      - PetHubAPIOauth:
+        - profiles:edit
+  /{orgID}/users/{userID}:
+    post:
+      tags:
+      - Manage Users By Organization
+      summary: Link a user to an organization
+      description: Adds a Pethub user to an organization's collection of users
+      parameters:
+      - name: userID
+        in: path
+        description: The user identification
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+        example: johndoe1234
+      - name: orgID
+        in: path
+        description: the unique ID for your organization
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+        example: petlove1234
+      responses:
+        "201":
+          description: Successfully created new user in PetHub's database and linked
+            to your org
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/201add'
+      security:
+      - PetHubAPIOauth:
+        - profiles:read
+        - profiles:edit
+components:
+  schemas:
+    "201New":
+      type: object
+      properties:
+        path:
+          type: string
+          example: api.pethub.com/users/johndoe12345678
+        allOf:
+          $ref: '#/components/schemas/User'
+      description: the 201 code for successfully creating a new user in PetHubs database
+    "201add":
+      type: object
+      properties:
+        path:
+          type: string
+          example: api.pethub.com/users/johndoe12345678
+        allOf:
+          $ref: '#/components/schemas/User'
+      description: the 201 code for successfully adding linking a user to an organization's
+        users
+    Users:
+      type: array
+      items:
+        $ref: '#/components/schemas/User'
+    User:
+      required:
+      - firstName
+      - id
+      - lastName
+      type: object
+      properties:
+        id:
+          type: string
+          description: The user ID
+          example: johndoe12345678
+        firstName:
+          type: string
+          description: The user's first name
+          example: John
+        lastName:
+          type: string
+          description: The user's last name
+          example: Doe
+        street:
+          type: string
+          description: The user's street
+          example: 1234 West Avenue
+        city:
+          type: string
+          description: The user's street
+          example: New York City
+        State/Province:
+          type: string
+          description: The user's state or province
+          example: NY
+        postalCode:
+          type: string
+          description: The user's postal/zip code
+          example: "10000"
+        country:
+          type: string
+          description: The user's country
+          example: USA
+        primaryEmail:
+          type: string
+          description: The user's primary email address
+          example: johndoe@gmail.com
+        additionalEmails:
+          type: array
+          example: johndoe@outlook.com
+          items:
+            type: string
+        petIds:
+          type: array
+          example:
+          - rocky1234
+          - charlie 2345
+          items:
+            type: string
+    returnUpdateInfo:
+      type: object
+      properties:
+        userID:
+          type: string
+          example: johndoe12345678
+        updatedInfo:
+          $ref: '#/components/schemas/userInformation'
+      description: the 201 code for successfully creating a new user in PetHubs database
+    userInformation:
+      type: object
+      properties:
+        street:
+          type: string
+          description: The user's street
+          example: 1234 West Avenue
+        city:
+          type: string
+          description: The user's street
+          example: New York City
+        State/Province:
+          type: string
+          description: The user's state or province
+          example: NY
+        postalCode:
+          type: string
+          description: The user's postal/zip code
+          example: "10000"
+        country:
+          type: string
+          description: The user's country
+          example: USA
+        primaryEmail:
+          type: string
+          description: The user's primary email address
+          example: johndoe@gmail.com
+        additionalEmails:
+          type: array
+          example: johndoe@outlook.com
+          items:
+            type: string
+        petIds:
+          type: array
+          example:
+          - rocky1234
+          - charlie 2345
+          items:
+            type: string
+        orgIDs:
+          type: array
+          description: The organizations related to this user
+          example:
+          - bigCityHS1234
+          - sunnyBeach5678
+          items:
+            type: string
+  parameters:
+    userID:
+      name: userID
+      in: path
+      description: The user identification
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+      example: johndoe1234
+    orgID:
+      name: orgID
+      in: path
+      description: the unique ID for your organization
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+      example: petlove1234
+  securitySchemes:
+    PetHubAPIOauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /oauth/authorize
+          tokenUrl: /oauth/token
+          scopes:
+            medical:read: View medical information about a user's pet
+            medical:edit: Modify medical information about a user's pet
+            profiles:read: View profile information about a user and their pet
+            profiles:edit: Modify profile information about a user and their pet
+            trustedCircle:read: View Trusted Circle Contact information for a user's
+              pet
+            trustedCircle:edit: Modify Trusted Circle Contact information for a user's
+              pet
+            scansEvents:read: View scan and event information for a user's pet
+            scansEvents:edit: Modify scan and event information for a user's pet
